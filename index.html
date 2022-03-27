@@ -10,8 +10,9 @@
             var mqtt;
             var reconnectTimeout = 4000;
             var host = "test.mosquitto.org";
-            var port = 8081;
+            var port = 8080;
             var connection_flag = 0;
+            var message = "";
 
             function onConnectionLost() {
                 console.log("Connection lost");
@@ -20,8 +21,9 @@
 
             function onConnect() {
                 var tmpStr = "Connected to " + host + " on port " + port;
-                document.getElementById("constatus").innerHTML = tmpStr;
-                console.log("tmpStr");
+                document.getElementById("constatus").innerHTML = "Successfully Connected.";
+                document.getElementById("status").innerHTML = tmpStr;
+                console.log(tmpStr);
                 connection_flag = 1;
             }
 
@@ -30,19 +32,25 @@
             }
 
             function onFailure(){
-                var tmpStr = "Connection Attempt to Host " + host + "Failed. Attempting to Reconnect.";
+                var tmpStr = "Connection Attempt to Host " + host + " on port " + port + " Failed. Attempting to Reconnect.";
                 document.getElementById("constatus").innerHTML = tmpStr;
                 console.log(tmpStr);
                 setTimeout(MQTTconnect, reconnectTimeout);
-
             }
 
             function onMessageArrived(msg){
-                out_msg = msg.payloadString;
-                console.log(out_msg);
+                message = msg.payloadString;
+                document.getElementById("messages").innerHTML = message;
+                console.log("Received: " + message);
             }
 
             function MQTTconnect() {
+                if(connection_flag == 1){
+                    var tmpStr = "Already Connected to " + host + "|" + port + ". Click end for new session.";
+                    document.getElementById("constatus").innerHTML = tmpStr;
+                    console.log(tmpStr);
+                    return;
+                }
                 document.getElementById("messages").innerHTML = "";
                 var s = document.forms["con"]["sname"].value;
                 var p = document.forms["con"]["pname"].value;
@@ -61,6 +69,7 @@
 
                 var x = Math.floor(Math.random() * 10000);
                 var cname = "clientId-" + x;
+
                 mqtt = new Paho.MQTT.Client(host, port, cname);
                 var options = {
                     timeout: 4000,
@@ -72,19 +81,64 @@
                 mqtt.onConnectionLost = onConnectionLost;
                 mqtt.connect(options);
 
-                return false; 
+            }
+
+            function closeConnection(){
+                if(connection_flag == 0){
+                    var tmpStr = "Not connected to any session.";
+                    document.getElementById("constatus").innerHTML = tmpStr;
+                    console.log(tmpStr);
+                    return;
+                }
+                mqtt.disconnect();
+                var tmpStr = "Disconnected from " + host + " | " + port;
+                document.getElementById("constatus").innerHTML = tmpStr;
+                document.getElementById("status").innerHTML = "Not Connected";
+                console.log(tmpStr);
+                connection_flag = 0;
             }
 
             function subscribeTopic(){
+                document.getElementById("substatus").innerHTML = "";
+                if(connection_flag == 0){
+                    var tmpStr = "Not connected to any session.";
+                    document.getElementById("substatus").innerHTML = tmpStr;
+                    console.log(tmpStr);
+                    return;
+                }
 
+                var subtopic = document.forms["sub"]["tname"].value;
+                mqtt.subscribe(subtopic);
+                console.log("Subbed to topic: " + subtopic);
+                document.getElementById("substatus").innerHTML = "Subbed to topic: " + subtopic;
             }
 
             function sendMessage(){
-                
+                document.getElementById("msgstatus").innerHTML = "";
+                if(connection_flag == 0){
+                    var tmpStr = "Not connected to any session.";
+                    document.getElementById("msgstatus").innerHTML = tmpStr;
+                    console.log(tmpStr);
+                    return;
+                }
+
+                var messageText = document.forms["msg"]["msgtext"].value;
+                var topic = document.forms["msg"]["mtname"].value;
+
+                message = new Paho.MQTT.Message(messageText);
+
+                if (topic != "") {
+                    message.destinationName = topic;
+                } else {
+                    message.destinationName = "default-topic";
+                }
+                mqtt.send(message);
+                console.log("Message: " + messageText + " sent.")
+                document.getElementById("msgstatus").innerHTML = "Message sent.";
             }
 
         </script>
-        <title>Lab 4 Map</title>
+        <title>Lab 4</title>
     </head>
     <body>
         <h1>
@@ -106,8 +160,8 @@
             <input type="text" id="sname" name="sname"><br>
             <label for="pname">Port:</label><br>
             <input type="text" id="pname" name="pname"><br><br>
-            <input type="submit" value="Start">
-            <input type="submit" value="End" style="margin-bottom:10px; margin-left: 20px;"><br><br>
+            <input type="button" value="Start" onclick="MQTTconnect()">
+            <input type="button" value="End" style="margin-bottom:10px; margin-left: 20px;" onclick="closeConnection()"><br><br>
         </form>
         <p id="constatus"></p>
         <br/>
@@ -116,11 +170,24 @@
             Subscribe to Topic:
         </h2>
         <form id="sub">
-            <label for="tname">Topic:</label><br>
+            <label for="tname">Subscription Topic:</label><br>
             <input type="text" id="tname" name="tname"><br><br>
-            <input type="submit" value="Subscribe"><br><br>
+            <input type="button" value="Subscribe" onclick="subscribeTopic()"><br><br>
         </form>
         <p id="substatus"></p>
+        <br/>
+
+        <h2>
+            Send Message:
+        </h2>
+        <form id="msg">
+            <label for="mtname">Publish Topic:</label><br>
+            <input type="text" id="mtname" name="mtname"><br><br>
+            <label for="msgtext">Message:</label><br>
+            <input type="text" id="msgtext" name="msgtext"><br><br>
+            <input type="button" value="Send" onclick="sendMessage()"><br><br>
+        </form>
+        <p id="msgstatus"></p>
         <br/>
 
         <h3>
@@ -128,5 +195,6 @@
         </h3>
         <p id="messages">No Messages</p>
         <br/>
+        <script src="./script.js"></script>
     </body>
 </html>
