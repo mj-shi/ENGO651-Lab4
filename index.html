@@ -8,7 +8,7 @@
         <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
         <script type = "text/javascript" language = "javascript">
             var mqtt;
-            var reconnectTimeout = 2000;
+            var reconnectTimeout = 4000;
             var host = "test.mosquitto.org";
             var port = 8081;
             var connection_flag = 0;
@@ -19,19 +19,20 @@
             }
 
             function onConnect() {
-                console.log("Connected to " + host + "on port " + port);
-                mqtt.subscribe("sensor1");
-                message = new Paho.MQTT.Message("Hello World");
-                message.destinationName = "sensor1";
-                mqtt.send(message);
+                var tmpStr = "Connected to " + host + " on port " + port;
+                document.getElementById("constatus").innerHTML = tmpStr;
+                console.log("tmpStr");
+                connection_flag = 1;
             }
 
             function onConnected(recon, url){
-                console.log("is onConnected");
+                console.log("onConnected");
             }
 
             function onFailure(){
-                console.log("Connection Attempt to Host " + host + "Failed");
+                var tmpStr = "Connection Attempt to Host " + host + "Failed. Attempting to Reconnect.";
+                document.getElementById("constatus").innerHTML = tmpStr;
+                console.log(tmpStr);
                 setTimeout(MQTTconnect, reconnectTimeout);
 
             }
@@ -42,16 +43,44 @@
             }
 
             function MQTTconnect() {
+                document.getElementById("messages").innerHTML = "";
+                var s = document.forms["con"]["sname"].value;
+                var p = document.forms["con"]["pname"].value;
+
+                if(s != "") {
+                    host = s;
+                    console.log("host = " + host);
+                }
+
+                if(p != "") {
+                    port = parseInt(p);
+                    console.log("port = " + port)
+                }
+
                 console.log("Connecting to " + host + " " + port);
-                mqtt = new Paho.MQTT.Client(host, port, "clientId");
+
+                var x = Math.floor(Math.random() * 10000);
+                var cname = "clientId-" + x;
+                mqtt = new Paho.MQTT.Client(host, port, cname);
                 var options = {
                     timeout: 4000,
                     onSuccess: onConnect,
                     onFailure: onFailure,
                 };
+
                 mqtt.onMessageArrived = onMessageArrived;
                 mqtt.onConnectionLost = onConnectionLost;
                 mqtt.connect(options);
+
+                return false; 
+            }
+
+            function subscribeTopic(){
+
+            }
+
+            function sendMessage(){
+                
             }
 
         </script>
@@ -59,11 +88,45 @@
     </head>
     <body>
         <h1>
-            MQTT IoT App
+            Lab 4 App
         </h1>
         <br/>
-        <script>
-            MQTTconnect();
-        </script>
+        
+        <h3>
+            Connection Status:
+        </h3>
+        <p id="status">Not Connected</p>
+        <br/>
+
+        <h2>
+            Connect:
+        </h2>
+        <form id = "con">
+            <label for="sname">Server:</label><br>
+            <input type="text" id="sname" name="sname"><br>
+            <label for="pname">Port:</label><br>
+            <input type="text" id="pname" name="pname"><br><br>
+            <input type="submit" value="Start">
+            <input type="submit" value="End" style="margin-bottom:10px; margin-left: 20px;"><br><br>
+        </form>
+        <p id="constatus"></p>
+        <br/>
+
+        <h2>
+            Subscribe to Topic:
+        </h2>
+        <form id="sub">
+            <label for="tname">Topic:</label><br>
+            <input type="text" id="tname" name="tname"><br><br>
+            <input type="submit" value="Subscribe"><br><br>
+        </form>
+        <p id="substatus"></p>
+        <br/>
+
+        <h3>
+            Messages:
+        </h3>
+        <p id="messages">No Messages</p>
+        <br/>
     </body>
 </html>
