@@ -6,138 +6,7 @@
         
         <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js" type="text/javascript"></script>
         <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
-        <script type = "text/javascript" language = "javascript">
-            var mqtt;
-            var reconnectTimeout = 4000;
-            var host = "test.mosquitto.org";
-            var port = 8080;
-            var connection_flag = 0;
-            var message = "";
 
-            function onConnectionLost() {
-                console.log("Connection lost");
-                connection_flag = 0;
-            }
-
-            function onConnect() {
-                var tmpStr = "Connected to " + host + " on port " + port;
-                document.getElementById("constatus").innerHTML = "Successfully Connected.";
-                document.getElementById("status").innerHTML = tmpStr;
-                console.log(tmpStr);
-                connection_flag = 1;
-            }
-
-            function onConnected(recon, url){
-                console.log("onConnected");
-            }
-
-            function onFailure(){
-                var tmpStr = "Connection Attempt to Host " + host + " on port " + port + " Failed. Attempting to Reconnect.";
-                document.getElementById("constatus").innerHTML = tmpStr;
-                console.log(tmpStr);
-                setTimeout(MQTTconnect, reconnectTimeout);
-            }
-
-            function onMessageArrived(msg){
-                message = msg.payloadString;
-                document.getElementById("messages").innerHTML = message;
-                console.log("Received: " + message);
-            }
-
-            function MQTTconnect() {
-                if(connection_flag == 1){
-                    var tmpStr = "Already Connected to " + host + "|" + port + ". Click end for new session.";
-                    document.getElementById("constatus").innerHTML = tmpStr;
-                    console.log(tmpStr);
-                    return;
-                }
-                document.getElementById("messages").innerHTML = "";
-                var s = document.forms["con"]["sname"].value;
-                var p = document.forms["con"]["pname"].value;
-
-                if(s != "") {
-                    host = s;
-                    console.log("host = " + host);
-                }
-
-                if(p != "") {
-                    port = parseInt(p);
-                    console.log("port = " + port)
-                }
-
-                console.log("Connecting to " + host + " " + port);
-
-                var x = Math.floor(Math.random() * 10000);
-                var cname = "clientId-" + x;
-
-                mqtt = new Paho.MQTT.Client(host, port, cname);
-                var options = {
-                    timeout: 4000,
-                    onSuccess: onConnect,
-                    onFailure: onFailure,
-                };
-
-                mqtt.onMessageArrived = onMessageArrived;
-                mqtt.onConnectionLost = onConnectionLost;
-                mqtt.connect(options);
-
-            }
-
-            function closeConnection(){
-                if(connection_flag == 0){
-                    var tmpStr = "Not connected to any session.";
-                    document.getElementById("constatus").innerHTML = tmpStr;
-                    console.log(tmpStr);
-                    return;
-                }
-                mqtt.disconnect();
-                var tmpStr = "Disconnected from " + host + " | " + port;
-                document.getElementById("constatus").innerHTML = tmpStr;
-                document.getElementById("status").innerHTML = "Not Connected";
-                console.log(tmpStr);
-                connection_flag = 0;
-            }
-
-            function subscribeTopic(){
-                document.getElementById("substatus").innerHTML = "";
-                if(connection_flag == 0){
-                    var tmpStr = "Not connected to any session.";
-                    document.getElementById("substatus").innerHTML = tmpStr;
-                    console.log(tmpStr);
-                    return;
-                }
-
-                var subtopic = document.forms["sub"]["tname"].value;
-                mqtt.subscribe(subtopic);
-                console.log("Subbed to topic: " + subtopic);
-                document.getElementById("substatus").innerHTML = "Subbed to topic: " + subtopic;
-            }
-
-            function sendMessage(){
-                document.getElementById("msgstatus").innerHTML = "";
-                if(connection_flag == 0){
-                    var tmpStr = "Not connected to any session.";
-                    document.getElementById("msgstatus").innerHTML = tmpStr;
-                    console.log(tmpStr);
-                    return;
-                }
-
-                var messageText = document.forms["msg"]["msgtext"].value;
-                var topic = document.forms["msg"]["mtname"].value;
-
-                message = new Paho.MQTT.Message(messageText);
-
-                if (topic != "") {
-                    message.destinationName = topic;
-                } else {
-                    message.destinationName = "default-topic";
-                }
-                mqtt.send(message);
-                console.log("Message: " + messageText + " sent.")
-                document.getElementById("msgstatus").innerHTML = "Message sent.";
-            }
-
-        </script>
         <title>Lab 4</title>
     </head>
     <body>
@@ -195,6 +64,19 @@
         </h3>
         <p id="messages">No Messages</p>
         <br/>
+        <h3>
+            Map:
+        </h3>
+        <form id="stat">
+            <label for="coursename">Course:</label><br>
+            <input type="text" id="crsname" name="crsname"><br><br>
+            <label for="yourname">Your Name:</label><br>
+            <input type="text" id="yrname" name="yrname"><br><br>
+            <input type="button" value="Share My Status" onclick="shareStatus()"><br>
+        </form>
+        <br/>
+        <p id = "mstatus"></p>
+        <div id="map" style="width: 600px; height: 400px; margin-top:10px;"></div>
         <script src="./script.js"></script>
     </body>
 </html>
