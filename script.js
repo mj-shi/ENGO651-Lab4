@@ -4,15 +4,23 @@ var host = "test.mosquitto.org";
 var port = 8081; //use port 8080 when testing locally (not on browser)
 var connection_flag = 0;
 var message = "";
+var intentional_dc = 0;
 
 // On connection lost
 function onConnectionLost() {
     resetFields();
-    console.log("Connection lost");
-    document.getElementById("status").innerHTML = "Disconnected. Attempting to Reconnect.";
-    document.getElementById("constatus").innerHTML = "Connection Lost. Attempting to Reconnect.";;
-    setTimeout(MQTTconnect, reconnectTimeout);
+    if (intentional_dc == 0){
+        console.log("Connection lost");
+        document.getElementById("status").innerHTML = "Disconnected. Attempting to Reconnect.";
+        document.getElementById("constatus").innerHTML = "Connection Lost. Attempting to Reconnect.";;
+        setTimeout(MQTTconnect, reconnectTimeout);
+    } else{
+        console.log("Disconnected");
+        document.getElementById("status").innerHTML = "Disconnected.";
+        document.getElementById("constatus").innerHTML = "Connection Lost.";
+    }
     connection_flag = 0;
+    intentional_dc = 0;
 }
 
 // On connect 
@@ -116,6 +124,7 @@ function closeConnection(){
     }
     resetFields();
     connection_flag = 0;
+    intentional_dc = 1;
     mqtt.disconnect();
     var tmpStr = "Disconnected from " + host + " | " + port;
     document.getElementById("constatus").innerHTML = tmpStr;
