@@ -1,13 +1,17 @@
 var mqtt;
 var reconnectTimeout = 4000;
 var host = "test.mosquitto.org";
-var port = 8081; //use port 8080 when testing locally
+var port = 8081; //use port 8080 when testing locally (not on browser)
 var connection_flag = 0;
 var message = "";
 
 // On connection lost
 function onConnectionLost() {
+    resetFields();
     console.log("Connection lost");
+    document.getElementById("status").innerHTML = "Disconnected. Attempting to Reconnect.";
+    document.getElementById("constatus").innerHTML = "Connection Lost. Attempting to Reconnect.";;
+    setTimeout(MQTTconnect, reconnectTimeout);
     connection_flag = 0;
 }
 
@@ -90,7 +94,7 @@ function MQTTconnect() {
 
     mqtt = new Paho.MQTT.Client(host, port, cname);
     var options = {
-        useSSL: true, //delete this line when testing locally
+        useSSL: true, //remove this line when testing locally (not on browser)
         timeout: 4000,
         onSuccess: onConnect,
         onFailure: onFailure,
@@ -110,14 +114,16 @@ function closeConnection(){
         console.log(tmpStr);
         return;
     }
+    resetFields();
+    connection_flag = 0;
     mqtt.disconnect();
     var tmpStr = "Disconnected from " + host + " | " + port;
     document.getElementById("constatus").innerHTML = tmpStr;
     document.getElementById("status").innerHTML = "Not Connected";
     console.log(tmpStr);
-    connection_flag = 0;
 }
 
+// Subscribe to a topic
 function subscribeTopic(){
     document.getElementById("substatus").innerHTML = "";
     if(connection_flag == 0){
@@ -133,6 +139,7 @@ function subscribeTopic(){
     document.getElementById("substatus").innerHTML = "Subbed to topic: " + subtopic;
 }
 
+// Send a message 
 function sendMessage(){
     document.getElementById("msgstatus").innerHTML = "";
     if(connection_flag == 0){
@@ -155,6 +162,15 @@ function sendMessage(){
     mqtt.send(message);
     console.log("Message: " + messageText + " sent.")
     document.getElementById("msgstatus").innerHTML = "Message sent.";
+}
+
+// Reset all status fields
+function resetFields() {
+    document.getElementById("messages").innerHTML = "";
+    document.getElementById("msgstatus").innerHTML = "";
+    document.getElementById("substatus").innerHTML = "";
+    document.getElementById("constatus").innerHTML = "";
+    document.getElementById("mstatus").innerHTML = "";
 }
 
 // Create map
