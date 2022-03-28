@@ -30,24 +30,32 @@ function onFailure(){
 }
 
 function isJson(item) {
+    console.log(item);
+    item = typeof item !== "string"
+        ? JSON.stringify(item)
+        : item;
+
     try {
-        item = JSON.stringify(item);
         item = JSON.parse(item);
     } catch (e) {
-        console.log(e);
         return false;
     }
-    console.log("true");
-    return true;
+
+    if (typeof item === "object" && item !== null) {
+        return true;
+    }
+
+    return false;
 }
 
 function onMessageArrived(msg){
     debugger;
-    if(isJson(msg)){
-        console.log("Received JSON: " + msg);
-        updateMap(msg);
+    var tmpVar = msg.payloadString;
+    if(isJson(tmpVar)){
+        console.log("Received JSON: " + tmpVar);
+        updateMap(tmpVar);
     } else {
-        message = msg.payloadString;
+        message = tmpVar;
         document.getElementById("messages").innerHTML = message;
         console.log("Received: " + message);
     }
@@ -158,8 +166,13 @@ var tiles = L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}
     zoomOffset: -1
 }).addTo(map);
 
-function updateMap() {
-    
+function updateMap(msg) {
+    var tmpStr = JSON.stringify(msg);
+    document.getElementById("messages").innerHTML = tmpStr;
+    var tmpJSON = msg[0];
+    var la = tmpJSON.latitude;
+    var lo = tmpJSON.longitude;
+    var t = tmpJSON.temperature;    
 }
 
 function shareStatus() {
@@ -199,8 +212,8 @@ function shareStatus() {
         msgjson.destinationName = topic;
 
         mqtt.send(msgjson);
-        console.log("Message: " + msgjson + " sent to " + topic)
-        document.getElementById("mstatus").innerHTML = "GeoJSON sent to " + topic;
+        console.log("Message: " + geojson + " sent to " + topic)
+        document.getElementById("mstatus").innerHTML = "GeoJSON: " + geojson + " sent to " + topic;
     }
   
     function error() {
