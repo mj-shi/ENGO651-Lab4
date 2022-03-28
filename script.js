@@ -49,7 +49,6 @@ function isJson(item) {
 }
 
 function onMessageArrived(msg){
-    debugger;
     var tmpVar = msg.payloadString;
     if(isJson(tmpVar)){
         console.log("Received JSON: " + tmpVar);
@@ -166,13 +165,59 @@ var tiles = L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}
     zoomOffset: -1
 }).addTo(map);
 
+// Icons
+var greenIcon = new L.Icon({
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+});
+
+var redIcon = new L.Icon({
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+});
+
+var blueIcon = new L.Icon({
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+});
+
 function updateMap(msg) {
-    var tmpStr = JSON.stringify(msg);
-    document.getElementById("messages").innerHTML = tmpStr;
-    var tmpJSON = msg[0];
-    var la = tmpJSON.latitude;
-    var lo = tmpJSON.longitude;
-    var t = tmpJSON.temperature;    
+    try {
+        var tmpStr = JSON.stringify(msg);
+        document.getElementById("messages").innerHTML = tmpStr;
+        var tmpJSON = JSON.parse(msg);
+        var la = tmpJSON.latitude;
+        var lo = tmpJSON.longitude;
+        var t = tmpJSON.temperature;
+        document.getElementById("messages").innerHTML = "Received GeoJSON - Latitude: " + la + " | Longitude: " + lo + " | Temperature: " + t;
+
+        if(t < 10) {
+            //Blue
+            var marker = L.marker([la, lo], {icon: blueIcon}).addTo(map);
+        } else if (t > 29) {
+            //Red
+            var marker = L.marker([la, lo], {icon: redIcon}).addTo(map);
+        } else {
+            //Green
+            var marker = L.marker([la, lo], {icon: greenIcon}).addTo(map);
+        }
+    } catch (e) {
+        console.log(e);
+        document.getElementById("messages").innerHTML = "Invalid JSON file for app map.";
+        console.log("Invalid JSON file for app map.");
+    }
 }
 
 function shareStatus() {
