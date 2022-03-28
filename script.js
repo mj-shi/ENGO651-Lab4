@@ -90,6 +90,7 @@ function MQTTconnect() {
 
     mqtt = new Paho.MQTT.Client(host, port, cname);
     var options = {
+        useSSL: true, //delete this line when testing locally
         timeout: 4000,
         onSuccess: onConnect,
         onFailure: onFailure,
