@@ -1,7 +1,7 @@
 var mqtt;
 var reconnectTimeout = 4000;
 var host = "test.mosquitto.org";
-var port = 8080;
+var port = 8081; //use port 8080 when testing locally
 var connection_flag = 0;
 var message = "";
 
@@ -243,7 +243,7 @@ function shareStatus() {
         const latitude  = position.coords.latitude;
         const longitude = position.coords.longitude;
         status.textContent = '';
-        var temperature = Math.floor((Math.random() * 60) - 40);
+        var temperature = Math.floor((Math.random() * 101) - 40);
 
         var la = latitude.toString();
         var lo = longitude.toString();
