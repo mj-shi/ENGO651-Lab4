@@ -5,11 +5,13 @@ var port = 8080;
 var connection_flag = 0;
 var message = "";
 
+// On connection lost
 function onConnectionLost() {
     console.log("Connection lost");
     connection_flag = 0;
 }
 
+// On connect 
 function onConnect() {
     var tmpStr = "Connected to " + host + " on port " + port;
     document.getElementById("constatus").innerHTML = "Successfully Connected.";
@@ -18,10 +20,7 @@ function onConnect() {
     connection_flag = 1;
 }
 
-function onConnected(recon, url){
-    console.log("onConnected");
-}
-
+// On failure to connect, automatically attempt to reconnect
 function onFailure(){
     var tmpStr = "Connection Attempt to Host " + host + " on port " + port + " Failed. Attempting to Reconnect.";
     document.getElementById("constatus").innerHTML = tmpStr;
@@ -29,25 +28,27 @@ function onFailure(){
     setTimeout(MQTTconnect, reconnectTimeout);
 }
 
-function isJson(item) {
-    console.log(item);
-    item = typeof item !== "string"
-        ? JSON.stringify(item)
-        : item;
+// Logic to check if message is in JSON format
+function isJson(msg) {
+    console.log(msg);
+    msg = typeof msg !== "string"
+        ? JSON.stringify(msg)
+        : msg;
 
     try {
-        item = JSON.parse(item);
+        msg = JSON.parse(msg);
     } catch (e) {
         return false;
     }
 
-    if (typeof item === "object" && item !== null) {
+    if (typeof msg === "object" && msg !== null) {
         return true;
     }
 
     return false;
 }
 
+// On message arrived
 function onMessageArrived(msg){
     var tmpVar = msg.payloadString;
     if(isJson(tmpVar)){
@@ -60,6 +61,7 @@ function onMessageArrived(msg){
     }
 }
 
+// Connect function by pressing start
 function MQTTconnect() {
     if(connection_flag == 1){
         var tmpStr = "Already Connected to " + host + "|" + port + ". Click end for new session.";
@@ -99,6 +101,7 @@ function MQTTconnect() {
 
 }
 
+// Close connection function by pressing end
 function closeConnection(){
     if(connection_flag == 0){
         var tmpStr = "Not connected to any session.";
@@ -193,6 +196,7 @@ var blueIcon = new L.Icon({
     shadowSize: [41, 41]
 });
 
+// Update map with marker after receiving message
 function updateMap(msg) {
     try {
         var tmpStr = JSON.stringify(msg);
@@ -205,14 +209,16 @@ function updateMap(msg) {
 
         if(t < 10) {
             //Blue
-            var marker = L.marker([la, lo], {icon: blueIcon}).addTo(map);
+            var marker = L.marker([la, lo], {icon: blueIcon});
         } else if (t > 29) {
             //Red
-            var marker = L.marker([la, lo], {icon: redIcon}).addTo(map);
+            var marker = L.marker([la, lo], {icon: redIcon});
         } else {
             //Green
-            var marker = L.marker([la, lo], {icon: greenIcon}).addTo(map);
+            var marker = L.marker([la, lo], {icon: greenIcon});
         }
+        marker.bindPopup("Temperature: " + t + " degrees");
+        marker.addTo(map);
     } catch (e) {
         console.log(e);
         document.getElementById("messages").innerHTML = "Invalid JSON file for app map.";
@@ -220,7 +226,15 @@ function updateMap(msg) {
     }
 }
 
+// Share status function
 function shareStatus() {
+
+    if(connection_flag == 0){
+        var tmpStr = "Not connected to any session.";
+        document.getElementById("mstatus").innerHTML = tmpStr;
+        console.log(tmpStr);
+        return;
+    }
 
     const status = document.querySelector('#mstatus');
   
