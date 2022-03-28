@@ -1,4 +1,4 @@
-## ENGO651 Lab 4 Michael Shi 10174675
+## ENGO651 Lab 4 Michael Shi
 
 # INTRODUCTION
 - This lab project focuses on implementing MQTT protocol in a simple IoT Geoweb app
